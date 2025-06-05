@@ -6,13 +6,13 @@
 /*   By: asaitakashi <asaitakashi@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/21 12:00:00 by asaitakashi       #+#    #+#             */
-/*   Updated: 2025/06/01 16:50:31 by asaitakashi      ###   ########.fr       */
+/*   Updated: 2025/06/03 10:51:02 by asaitakashi      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "fractol.h"
 
-void	init_fractal(t_fractal *f, int type)
+void	init_fractol(t_fractol *f, int type)
 {
 	f->mlx = mlx_init();
 	if (!f->mlx)
@@ -25,14 +25,14 @@ void	init_fractal(t_fractal *f, int type)
 		exit(1);
 	f->addr = mlx_get_data_addr(f->img, &f->bits_per_pixel,
 			&f->line_length, &f->endian);
-	f->zoom = INT_TO_FIXED(1);
-	f->offset_x = 0;
-	f->offset_y = 0;
+	f->zoom = 1.0;
+	f->offset_x = 0.0;
+	f->offset_y = 0.0;
 	f->max_iter = MAX_ITER;
 	f->color_shift = 0;
-	f->fractal_type = type;
-	f->julia_c.re = INT_TO_FIXED(-1) / 3;
-	f->julia_c.im = INT_TO_FIXED(2) / 3;
+	f->fractol_type = type;
+	f->julia_c.re = -0.33;
+	f->julia_c.im = 0.67;
 	f->mouse_x = WIDTH / 2;
 	f->mouse_y = HEIGHT / 2;
 }

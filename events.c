@@ -6,40 +6,21 @@
 /*   By: asaitakashi <asaitakashi@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/21 12:00:00 by asaitakashi       #+#    #+#             */
-/*   Updated: 2025/06/01 15:58:09 by asaitakashi      ###   ########.fr       */
+/*   Updated: 2025/06/05 15:45:09 by asaitakashi      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "fractol.h"
 
 /*
-** handle_arrow_keys:
-**   Moves the fractal view with arrow keys.
-*/
-static void	handle_arrow_keys(int keycode, t_fractal *f)
-{
-	double	move_amount;
-
-	move_amount = 0.1 / f->zoom;
-	if (keycode == LEFT)
-		f->offset_x -= move_amount;
-	else if (keycode == RIGHT)
-		f->offset_x += move_amount;
-	else if (keycode == UP)
-		f->offset_y -= move_amount;
-	else if (keycode == DOWN)
-		f->offset_y += move_amount;
-}
-
-/*
 ** handle_key:
 **   Handles key events (ESC, arrows, color shift).
 */
-int	handle_key(int keycode, t_fractal *f)
+int	handle_key(int keycode, t_fractol *f)
 {
-	long	move_step;
+	double	move_step;
 
-	move_step = FIXED_DIVIDE(INT_TO_FIXED(1), f->zoom);
+	move_step = 1.0 / f->zoom;
 	if (keycode == ESC)
 		close_window(f);
 	else if (keycode == LEFT)
@@ -50,41 +31,45 @@ int	handle_key(int keycode, t_fractal *f)
 		f->offset_y -= move_step;
 	else if (keycode == DOWN)
 		f->offset_y += move_step;
-	else if (keycode == 'r')
+	else if (keycode == 'c' || keycode == 'C')
 		shift_colors(f);
-	render_fractal(f);
+	else if (keycode == 'r' || keycode == 'R')
+	{
+		f->zoom = 1.0;
+		f->offset_x = 0.0;
+		f->offset_y = 0.0;
+		f->color_shift = 0;
+	}
+	render_fractol(f);
 	return (0);
-}
-
-/*
-** handle_zoom:
-**   Zooms in/out centered on mouse position.
-*/
-static void	apply_zoom(t_fractal *f, int x, int y, int zoom_in)
-{
-	long	zoom_factor;
-	long	mouse_x;
-	long	mouse_y;
-
-	mouse_x = INT_TO_FIXED(x - WIDTH / 2);
-	mouse_y = INT_TO_FIXED(y - HEIGHT / 2);
-	zoom_factor = zoom_in ? INT_TO_FIXED(2) : INT_TO_FIXED(1) / 2;
-	f->zoom = FIXED_MULTIPLY(f->zoom, zoom_factor);
-	f->offset_x = FIXED_MULTIPLY(f->offset_x, zoom_factor) - mouse_x;
-	f->offset_y = FIXED_MULTIPLY(f->offset_y, zoom_factor) - mouse_y;
 }
 
 /*
 ** handle_mouse:
 **   Handles mouse wheel zoom events.
 */
-int	handle_mouse(int button, int x, int y, t_fractal *f)
+int	handle_mouse(int button, int x, int y, t_fractol *f)
 {
-	if (button == ZOOM_IN || button == ZOOM_OUT)
+	double	zoom_factor;
+	double	mouse_x;
+	double	mouse_y;
+
+	zoom_factor = 1.5;
+	mouse_x = (x - WIDTH / 2.0) * (4.0 / (f->zoom * WIDTH)) + f->offset_x;
+	mouse_y = (y - HEIGHT / 2.0) * (4.0 / (f->zoom * HEIGHT)) + f->offset_y;
+	if (button == ZOOM_IN)
 	{
-		apply_zoom(f, x, y, button == ZOOM_IN);
-		render_fractal(f);
+		f->zoom *= zoom_factor;
+		f->offset_x = f->offset_x * zoom_factor - mouse_x;
+		f->offset_y = f->offset_y * zoom_factor - mouse_y;
 	}
+	else if (button == ZOOM_OUT)
+	{
+		f->zoom /= zoom_factor;
+		f->offset_x = f->offset_x / zoom_factor + mouse_x;
+		f->offset_y = f->offset_y / zoom_factor + mouse_y;
+	}
+	render_fractol(f);
 	return (0);
 }
 
@@ -92,16 +77,16 @@ int	handle_mouse(int button, int x, int y, t_fractal *f)
 ** handle_mouse_move:
 **   Updates Julia set parameters on mouse move.
 */
-int	handle_mouse_move(int x, int y, t_fractal *f)
+int	handle_mouse_move(int x, int y, t_fractol *f)
 {
-	if (f->fractal_type == 2)
+	if (f->fractol_type == 2)
 	{
-		f->julia_c.re = FIXED_DIVIDE(INT_TO_FIXED(x - WIDTH / 2),
-				INT_TO_FIXED(WIDTH / 4));
-		f->julia_c.im = FIXED_DIVIDE(INT_TO_FIXED(y - HEIGHT / 2),
-				INT_TO_FIXED(HEIGHT / 4));
-		render_fractal(f);
+		f->julia_c.re = (x - WIDTH / 2.0) / (WIDTH / 4.0);
+		f->julia_c.im = (y - HEIGHT / 2.0) / (HEIGHT / 4.0);
+		render_fractol(f);
 	}
+	f->mouse_x = x;
+	f->mouse_y = y;
 	return (0);
 }
 
@@ -109,17 +94,24 @@ int	handle_mouse_move(int x, int y, t_fractal *f)
 ** close_window:
 **   Cleans up and exits the program.
 */
-int	close_window(t_fractal *f)
+int	close_window(t_fractol *f)
 {
-	mlx_destroy_image(f->mlx, f->img);
-	mlx_destroy_window(f->mlx, f->win);
-	mlx_destroy_display(f->mlx);
-	free(f->mlx);
+	if (f->img)
+		mlx_destroy_image(f->mlx, f->img);
+	if (f->win)
+		mlx_destroy_window(f->mlx, f->win);
+	if (f->mlx)
+	{
+		mlx_destroy_display(f->mlx);
+		free(f->mlx);
+	}
 	exit(0);
-	return (0);
 }
 
-void	shift_colors(t_fractal *f)
+void	shift_colors(t_fractol *f)
 {
-	f->color_shift = (f->color_shift + 10) % 256;
+	f->color_shift += 10;
+	if (f->color_shift > 255)
+		f->color_shift = 0;
+	render_fractol(f);
 }

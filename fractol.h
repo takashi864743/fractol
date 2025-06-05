@@ -6,7 +6,7 @@
 /*   By: asaitakashi <asaitakashi@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/21 12:00:00 by asaitakashi       #+#    #+#             */
-/*   Updated: 2025/06/01 17:09:06 by asaitakashi      ###   ########.fr       */
+/*   Updated: 2025/06/03 10:49:48 by asaitakashi      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,27 +49,19 @@
 # define ZOOM_IN 4
 # define ZOOM_OUT 5
 
-/* Fixed point arithmetic */
-# define FIXED_POINT_BITS 16
-# define FIXED_POINT_FACTOR (1 << FIXED_POINT_BITS)
-# define INT_TO_FIXED(x) ((x) << FIXED_POINT_BITS)
-# define FIXED_TO_INT(x) ((x) >> FIXED_POINT_BITS)
-# define FIXED_MULTIPLY(x, y) ((((long long)(x)) * (y)) >> FIXED_POINT_BITS)
-# define FIXED_DIVIDE(x, y) ((((long long)(x)) << FIXED_POINT_BITS) / (y))
-
 /*
-** Complex number structure (using fixed point)
+** Complex number structure (using double)
 */
 typedef struct s_complex
 {
-	long	re;
-	long	im;
+	double	re;
+	double	im;
 } t_complex;
 
 /*
-** Fractal rendering context
+** Fractol rendering context
 */
-typedef struct s_fractal
+typedef struct s_fractol
 {
 	void		*mlx;
 	void		*win;
@@ -78,20 +70,20 @@ typedef struct s_fractal
 	int		bits_per_pixel;
 	int		line_length;
 	int		endian;
-	long		zoom;
-	long		offset_x;
-	long		offset_y;
+	double		zoom;
+	double		offset_x;
+	double		offset_y;
 	int		max_iter;
 	int		color_shift;
-	int		fractal_type;
+	int		fractol_type;
 	t_complex	julia_c;
 	int		mouse_x;
 	int		mouse_y;
-} t_fractal;
+} t_fractol;
 
 /* Main functions */
-void	init_fractal(t_fractal *f, int type);
-void	render_fractal(t_fractal *f);
+void	init_fractol(t_fractol *f, int type);
+void	render_fractol(t_fractol *f);
 int		main(int argc, char **argv);
 
 /* Fractal calculations */
@@ -100,17 +92,17 @@ int		julia(t_complex z, t_complex c, int max_iter);
 int		burning_ship(t_complex c, int max_iter);
 
 /* Event handlers */
-int		handle_key(int keycode, t_fractal *f);
-int		handle_mouse(int button, int x, int y, t_fractal *f);
-int		handle_mouse_move(int x, int y, t_fractal *f);
-int		close_window(t_fractal *f);
+int		handle_key(int keycode, t_fractol *f);
+int		handle_mouse(int button, int x, int y, t_fractol *f);
+int		handle_mouse_move(int x, int y, t_fractol *f);
+int		close_window(t_fractol *f);
 
 /* Utils */
-void	put_pixel(t_fractal *f, int x, int y, int color);
+void	put_pixel(t_fractol *f, int x, int y, int color);
 int		create_rgb(int r, int g, int b);
-void	shift_colors(t_fractal *f);
+void	shift_colors(t_fractol *f);
 int		ft_strcmp(const char *s1, const char *s2);
-long	ft_atof_fixed(const char *str);
+double	ft_atof(char *str);
 void	print_usage(void);
 
 #endif

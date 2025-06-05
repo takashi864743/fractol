@@ -6,7 +6,7 @@ MLX = $(MLX_DIR)/libmlx.a
 MLX_FLAGS = -L$(MLX_DIR) -lmlx -lXext -lX11 -lm
 
 SRCS = main.c \
-       fractals.c \
+       fractols.c \
        events.c \
        utils.c \
        init.c
